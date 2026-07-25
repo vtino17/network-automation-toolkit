@@ -1,2 +1,14 @@
-*.pyc\n__pycache__/\n*.log\n*.bak
-*.bak\n*.log
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.log
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.venv/
+venv/
