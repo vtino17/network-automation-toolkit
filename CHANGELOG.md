@@ -1,6 +1,5 @@
 # Changelog
 
-## [1.0.0] - 2026-07-26
+## [1.1.0] - 2026-07-26
 ### Added
-- Multi-vendor config backup
-- Compliance auditing
+- CHANGELOG.md
