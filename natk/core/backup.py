@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 class BackupManager:
@@ -31,7 +31,7 @@ class BackupManager:
         vendor = device.get("vendor", "unknown")
         ip = device.get("ip", hostname)
         port = device.get("port", 22)
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         vendor_dir = self.output_dir / vendor
         vendor_dir.mkdir(parents=True, exist_ok=True)
         filename = f"{hostname}_{timestamp}.cfg"

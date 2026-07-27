@@ -16,14 +16,14 @@ class Database:
     def add_backup_record(self, host, path, status):
         self._data['backups'].append({
             'host': host, 'path': path, 'status': status,
-            'timestamp': datetime.datetime.utcnow().isoformat()
+            'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
         })
         self.save()
     def add_check_record(self, host, policy, passed, total):
         self._data['checks'].append({
             'host': host, 'policy': policy,
             'passed': passed, 'total': total,
-            'timestamp': datetime.datetime.utcnow().isoformat()
+            'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
         })
         self.save()
     def get_backups(self, limit=50):
