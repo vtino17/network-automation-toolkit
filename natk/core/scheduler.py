@@ -1,6 +1,25 @@
 import json
 import datetime
 from pathlib import Path
+
+
+def _utcnow():
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def _parse_utc(value):
+    """Parse a stored ISO timestamp as UTC.
+
+    Schedules written before timestamps carried an offset are naive. Comparing
+    one of those against an aware `now` raises TypeError, so anything without
+    tzinfo is assumed to be the UTC it was always meant to be.
+    """
+    parsed = datetime.datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=datetime.timezone.utc)
+    return parsed
+
+
 class Scheduler:
     def __init__(self, path='schedules.json'):
         self.path = path
@@ -21,7 +40,7 @@ class Scheduler:
             'type': task_type,
             'interval': interval,
             'time': time,
-            'created': datetime.datetime.utcnow().isoformat(),
+            'created': _utcnow().isoformat(),
             'last_run': None,
             'next_run': self._calculate_next(interval, time),
             'enabled': True,
@@ -35,17 +54,17 @@ class Scheduler:
     def list_tasks(self):
         return self.tasks
     def get_due_tasks(self):
-        now = datetime.datetime.utcnow()
-        return [t for t in self.tasks if t['enabled'] and t.get('next_run') and datetime.datetime.fromisoformat(t['next_run']) <= now]
+        now = _utcnow()
+        return [t for t in self.tasks if t['enabled'] and t.get('next_run') and _parse_utc(t["next_run"]) <= now]
     def mark_run(self, task_id):
         for t in self.tasks:
             if t['id'] == task_id:
-                t['last_run'] = datetime.datetime.utcnow().isoformat()
+                t['last_run'] = _utcnow().isoformat()
                 t['next_run'] = self._calculate_next(t['interval'], t.get('time', '02:00'))
                 break
         self._save()
     def _calculate_next(self, interval, time_str):
-        now = datetime.datetime.utcnow()
+        now = _utcnow()
         hour, minute = map(int, time_str.split(':'))
         base = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         if base <= now:

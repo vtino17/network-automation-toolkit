@@ -30,3 +30,21 @@ class TestValidators:
     def test_sanitize(self):
         assert sanitize_filename('test/../file') == 'test__file'
         assert ' ' not in sanitize_filename('bad name')
+    def test_sanitize_strips_traversal_sequences(self):
+        assert '..' not in sanitize_filename('../../etc/passwd')
+        assert '..' not in sanitize_filename('....//x')
+        assert '..' not in sanitize_filename('a/../../b')
+    def test_sanitize_never_returns_a_directory_reference(self):
+        for hostile in ('..', '.', '', '_', '...', './.'):
+            assert sanitize_filename(hostile) == 'unnamed'
+    def test_sanitize_result_stays_inside_the_target_directory(self):
+        import os
+        base = '/var/backups'
+        for hostile in ('..', '../..', '../../etc/passwd', 'test/../file', ''):
+            joined = os.path.normpath(os.path.join(base, sanitize_filename(hostile)))
+            assert joined.startswith(base + os.sep)
+    def test_sanitize_leaves_ordinary_names_alone(self):
+        assert sanitize_filename('router01-config.txt') == 'router01-config.txt'
+        assert sanitize_filename('backup.2026-07-27.json') == 'backup.2026-07-27.json'
+    def test_sanitize_fallback_is_configurable(self):
+        assert sanitize_filename('..', fallback='device') == 'device'

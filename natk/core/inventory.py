@@ -1,6 +1,6 @@
 import json
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 class InventoryManager:
     def __init__(self, inventory_file=None):
         self.inventory_file = inventory_file or "inventory.json"
@@ -25,7 +25,7 @@ class InventoryManager:
             "port": port,
             "auth_method": auth_method,
             "tags": tags or [],
-            "added": datetime.utcnow().isoformat(),
+            "added": datetime.now(timezone.utc).isoformat(),
             "last_seen": None,
             "status": "unknown",
             "os_version": None,
@@ -34,7 +34,7 @@ class InventoryManager:
         existing = [d for d in self.devices if d["hostname"] == hostname]
         if existing:
             existing[0].update(device)
-            existing[0]["updated"] = datetime.utcnow().isoformat()
+            existing[0]["updated"] = datetime.now(timezone.utc).isoformat()
         else:
             self.devices.append(device)
         self._save()
@@ -55,7 +55,7 @@ class InventoryManager:
         device = self.get_device(hostname)
         if device:
             device["status"] = status
-            device["last_seen"] = datetime.utcnow().isoformat()
+            device["last_seen"] = datetime.now(timezone.utc).isoformat()
             if os_version:
                 device["os_version"] = os_version
             if serial:

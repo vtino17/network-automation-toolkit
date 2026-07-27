@@ -1,13 +1,13 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 class ReportGenerator:
     def __init__(self):
         self.sections = []
     def add_section(self, title, data):
-        self.sections.append({"title": title, "data": data, "timestamp": datetime.utcnow().isoformat()})
+        self.sections.append({"title": title, "data": data, "timestamp": datetime.now(timezone.utc).isoformat()})
     def to_json(self, path):
         report = {
-            "generated": datetime.utcnow().isoformat(),
+            "generated": datetime.now(timezone.utc).isoformat(),
             "tool": "natk",
             "sections": self.sections,
         }
@@ -18,7 +18,7 @@ class ReportGenerator:
         lines = []
         lines.append("Network Automation Toolkit Report")
         lines.append("=" * 40)
-        lines.append(f"Generated: {datetime.utcnow().isoformat()}")
+        lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}")
         lines.append("")
         for section in self.sections:
             lines.append(f"## {section['title']}")

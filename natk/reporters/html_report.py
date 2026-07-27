@@ -2,7 +2,7 @@ import datetime
 from natk.reporters.base import BaseReporter
 class HTMLReporter(BaseReporter):
     def generate(self, data, output_path):
-        timestamp = datetime.datetime.utcnow().isoformat()
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
         rows = ""
         for item in data:
             host = item.get("host", "")

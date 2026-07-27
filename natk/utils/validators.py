@@ -26,5 +26,20 @@ def validate_hostname(hostname):
 def validate_mac(mac):
     pattern = r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
     return bool(re.match(pattern, mac))
-def sanitize_filename(name):
-    return re.sub(r'[^\w\-\.]', '_', name)
+_TRAVERSAL = re.compile(r'\.{2,}')
+_UNSAFE = re.compile(r'[^\w\-\.]')
+
+
+def sanitize_filename(name, fallback='unnamed'):
+    """Reduce an untrusted string to a name safe to join onto a directory.
+
+    Replacing separators alone is not enough: '..' survives that step intact,
+    and os.path.join(base, '..') resolves above `base`. Dot runs are therefore
+    dropped before substitution. Names that end up referring to the directory
+    itself ('', '.', '_') fall back to a fixed value, so a caller can never be
+    handed a path that writes over the directory rather than into it.
+    """
+    cleaned = _UNSAFE.sub('_', _TRAVERSAL.sub('', name))
+    if not cleaned.strip('._'):
+        return fallback
+    return cleaned
