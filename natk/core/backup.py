@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -22,13 +23,15 @@ class BackupManager:
                 device = futures[future]
                 try:
                     result = future.result()
+                    if result["success"]:
+                        inv.update_status(device["hostname"], "backed_up")
                     results.append(result)
                 except Exception as e:
                     results.append({"host": device["hostname"], "success": False, "error": str(e)})
         return results
     def _backup_device(self, device):
-        hostname = device["hostname"]
-        vendor = device.get("vendor", "unknown")
+        hostname = self._safe_component(device["hostname"], "hostname")
+        vendor = self._safe_component(device.get("vendor", "unknown"), "vendor")
         ip = device.get("ip", hostname)
         port = device.get("port", 22)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -47,9 +50,13 @@ class BackupManager:
                 config = self._backup_linux(ip, port)
             else:
                 config = self._backup_generic(ip, port)
-            with open(filepath, "w") as f:
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            descriptor = os.open(filepath, flags, 0o600)
+            os.fchmod(descriptor, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as f:
                 f.write(config)
-            inv.update_status(hostname, "backed_up")
             return {
                 "host": hostname,
                 "vendor": vendor,
@@ -65,6 +72,12 @@ class BackupManager:
                 "success": False,
                 "error": str(e),
             }
+    @staticmethod
+    def _safe_component(value, field):
+        text = str(value)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", text):
+            raise ValueError(f"Invalid {field}: expected a safe filename component")
+        return text
     def _exec_ssh(self, ip, port, username, password, command):
         import paramiko
         client = paramiko.SSHClient()
