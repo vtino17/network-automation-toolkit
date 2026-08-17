@@ -13,7 +13,9 @@ def test_backup_succeeds_and_is_private(tmp_path, monkeypatch):
     )
 
     assert result["success"] is True
-    assert os.stat(result["path"]).st_mode & 0o777 == 0o600
+    assert os.path.isfile(result["path"])
+    if os.name != "nt":
+        assert os.stat(result["path"]).st_mode & 0o777 == 0o600
 
 
 def test_backup_rejects_inventory_path_traversal(tmp_path):

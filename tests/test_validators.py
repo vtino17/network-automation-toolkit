@@ -37,9 +37,9 @@ class TestValidators:
     def test_sanitize_never_returns_a_directory_reference(self):
         for hostile in ('..', '.', '', '_', '...', './.'):
             assert sanitize_filename(hostile) == 'unnamed'
-    def test_sanitize_result_stays_inside_the_target_directory(self):
+    def test_sanitize_result_stays_inside_the_target_directory(self, tmp_path):
         import os
-        base = '/var/backups'
+        base = str(tmp_path / 'backups')
         for hostile in ('..', '../..', '../../etc/passwd', 'test/../file', ''):
             joined = os.path.normpath(os.path.join(base, sanitize_filename(hostile)))
             assert joined.startswith(base + os.sep)

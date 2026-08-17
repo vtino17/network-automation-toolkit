@@ -54,9 +54,15 @@ class BackupManager:
             if hasattr(os, "O_NOFOLLOW"):
                 flags |= os.O_NOFOLLOW
             descriptor = os.open(filepath, flags, 0o600)
-            os.fchmod(descriptor, 0o600)
+            if hasattr(os, "fchmod"):
+                os.fchmod(descriptor, 0o600)
             with os.fdopen(descriptor, "w", encoding="utf-8") as f:
                 f.write(config)
+            # Windows does not expose fchmod; apply the same restrictive mode
+            # after closing the descriptor so backups remain readable only by
+            # the current user where the platform supports POSIX-style modes.
+            if not hasattr(os, "fchmod"):
+                os.chmod(filepath, 0o600)
             return {
                 "host": hostname,
                 "vendor": vendor,
