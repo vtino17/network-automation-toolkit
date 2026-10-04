@@ -41,8 +41,11 @@ python -m pip install -e ".[dev]"
 Run the automated test suite before opening a pull request:
 
 ```bash
+python -m pip install -e ".[dev]"
 pytest
 ```
+
+> Run backups with `--dry-run` first in production-like labs.
 
 ## Project Layout
 
